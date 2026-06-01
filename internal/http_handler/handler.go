@@ -2,17 +2,22 @@ package http_handler
 
 import (
 	"net/http"
-	"study/internal/service"
 	"study/models"
 
 	"github.com/labstack/echo/v4"
 )
 
-type Handler struct {
-	service *service.Service
+type Service interface {
+	CreateUser(user models.User) error
+	GetUsers() ([]models.User, error)
+	GetUser(name string) (models.User, error)
 }
 
-func NewHandler(s *service.Service) *Handler {
+type Handler struct {
+	service Service
+}
+
+func NewHandler(s Service) *Handler {
 	return &Handler{service: s}
 }
 
