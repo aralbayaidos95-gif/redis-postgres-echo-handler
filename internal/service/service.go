@@ -2,26 +2,36 @@ package service
 
 import (
 	"fmt"
-	"study/internal/storage"
 	"study/models"
 )
 
-type Service struct {
-	service *storage.Storage
-	redis   *storage.Redis
+type Postgres interface {
+	CreateUser(user models.User) error
+	GetUser(name string) (models.User, error)
+	GetUsers() ([]models.User, error)
 }
 
-func NewService(s *storage.Storage, r *storage.Redis) *Service {
-	return &Service{service: s, redis: r}
+type Redis interface {
+	CreateUser(user models.User) error
+	GetUser(name string) (models.User, error)
+}
+
+type Service struct {
+	store Postgres
+	redis Redis
+}
+
+func NewService(s Postgres, r Redis) *Service {
+	return &Service{store: s, redis: r}
 }
 
 func (s *Service) CreateUser(user models.User) error {
-	s.service.CreateUser(user)
+	s.store.CreateUser(user)
 	return s.redis.CreateUser(user)
 }
 
 func (s *Service) GetUsers() ([]models.User, error) {
-	return s.service.GetUsers()
+	return s.store.GetUsers()
 }
 
 func (s *Service) GetUser(name string) (models.User, error) {
@@ -32,7 +42,7 @@ func (s *Service) GetUser(name string) (models.User, error) {
 		return user, nil
 	}
 
-	user, err = s.service.GetUser(name)
+	user, err = s.store.GetUser(name)
 	if err != nil {
 		return user, err
 	}
